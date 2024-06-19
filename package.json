@@ -1,0 +1,21 @@
+{
+  "name": "2fa_authentication_nodejs",
+  "version": "1.0.0",
+  "description": "Using the speakeast libaray to create a two factor authentication in NodeJS applicaiton",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server"
+  },
+  "author": "Indrajith Bodhinayaka",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.15.1",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "speakeasy": "^2.0.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}
