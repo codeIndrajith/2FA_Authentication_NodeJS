@@ -9,13 +9,15 @@
   "author": "Indrajith Bodhinayaka",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.15.1",
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
+    "mysql2": "^3.10.1",
+    "sequelize": "^6.37.3",
     "speakeasy": "^2.0.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "nodemon": "^3.1.3"
   }
 }
