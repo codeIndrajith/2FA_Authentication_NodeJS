@@ -39,29 +39,73 @@ const verifyToken = asyncHandler(async (req, res) => {
 
   const user = await User.findByPk(userId);
   // Extract base32 value using string manipulation
-  let secretCode;
-  if (user.secret) {
-    const match = user.secret.match(/"base32":"([^"]+)"/);
-    if (match) {
-      secretCode = match[1];
+  if (user) {
+    let secretCode;
+    if (user.secret) {
+      const match = user.secret.match(/"base32":"([^"]+)"/);
+      if (match) {
+        secretCode = match[1];
+      }
     }
-  }
-  console.log(secretCode);
+    console.log(secretCode);
 
-  // Verify the token using speakeasy
-  const verified = speakeasy.totp.verify({
-    secret: secretCode,
-    encoding: 'base32',
-    token,
-  });
-  console.log(verified);
-  if (verified) {
-    // Update the user
-    await User.update({ secret: user.secret }, { where: { id: userId } });
-    res.json({ verified: true });
+    // Verify the token using speakeasy
+    const verified = speakeasy.totp.verify({
+      secret: secretCode,
+      encoding: 'base32',
+      token,
+    });
+    console.log(verified);
+    if (verified) {
+      // Update the user
+      await User.update({ secret: user.secret }, { where: { id: userId } });
+      res.json({ verified: true });
+    } else {
+      res.json({ verified: false });
+    }
   } else {
-    res.json({ verified: false });
+    res.status(500);
+    throw new Error('Error retrieving user');
   }
 });
 
-module.exports = { register, verifyToken };
+// Validate the token
+const validateToken = asyncHandler(async (req, res) => {
+  const { userId, token } = req.body;
+  const user = await User.findByPk(userId);
+  // Extract base32 value using string manipulation
+
+  if (user) {
+    let secretCode;
+    if (user.secret) {
+      // Remove the outer quotes and unescape the string
+      const unescapedSecret = user.secret.slice(1, -1).replace(/\\"/g, '"');
+
+      // Extract the base32 value using a refined regular expression
+      const match = unescapedSecret.match(/"base32":"([^"]+)"/);
+      if (match) {
+        secretCode = match[1];
+      } else {
+        throw new Error('Base32 value not found in secret');
+      }
+    }
+    console.log(secretCode);
+    // validate the token using speakeasy
+    const tokenValidates = speakeasy.totp.verify({
+      secret: secretCode,
+      encoding: 'base32',
+      token,
+      window: 1,
+    });
+    if (tokenValidates) {
+      res.json({ validated: true });
+    } else {
+      res.json({ validated: false });
+    }
+  } else {
+    res.status(500);
+    throw new Error('Error retrieving user');
+  }
+});
+
+module.exports = { register, verifyToken, validateToken };
