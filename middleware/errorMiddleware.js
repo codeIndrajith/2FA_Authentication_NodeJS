@@ -67,7 +67,7 @@ const sequelizeErrorHandler = (err, req, res, next) => {
 // Override Sequelize query method to catch and log errors
 Sequelize.prototype.query = function () {
   return originalQuery.apply(this, arguments).catch(function (err) {
-    customLogger.error('Sequelize Query Error:', err.message);
+    customLogger.error('Sequelize Query Error');
     throw err;
   });
 };
