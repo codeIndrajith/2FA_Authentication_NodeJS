@@ -19,18 +19,49 @@ const register = asyncHandler(async (req, res) => {
   const secret = '';
   const temp_secret = speakeasy.generateSecret();
   const user = await User.create({
-    id: id,
+    id,
     secret: temp_secret,
     name: name,
     email: email,
     password: password,
   });
   if (user) {
-    res.json({ id, secret: temp_secret.base32 });
+    res.json({ id: user.id, secret: temp_secret.base32 });
   } else {
     res.json('user not create');
   }
   await sequelize.close(); // close the Sequelize connection
 });
 
-module.exports = { register };
+// Verify the token and make secret perm
+const verifyToken = asyncHandler(async (req, res) => {
+  const { token, userId } = req.body;
+
+  const user = await User.findByPk(userId);
+  // Extract base32 value using string manipulation
+  let secretCode;
+  if (user.secret) {
+    const match = user.secret.match(/"base32":"([^"]+)"/);
+    if (match) {
+      secretCode = match[1];
+    }
+  }
+  console.log(secretCode);
+
+  // Verify the token using speakeasy
+  const verified = speakeasy.totp.verify({
+    secret: secretCode,
+    encoding: 'base32',
+    token,
+  });
+  console.log(verified);
+  if (verified) {
+    // Update the user
+    await User.update({ secret: user.secret }, { where: { id: userId } });
+    res.json({ verified: true });
+  } else {
+    res.json({ verified: false });
+  }
+});
+
+module.exports = { register, verifyToken };
