@@ -14,12 +14,12 @@ const register = asyncHandler(async (req, res) => {
     return res.json('User already exists');
   }
 
-  const id = uuid.v4();
+  const userId = uuid.v4();
   // create a temporary secret until it is verified
   const secret = '';
   const temp_secret = speakeasy.generateSecret();
   const user = await User.create({
-    id,
+    id: userId,
     secret: temp_secret,
     name: name,
     email: email,
@@ -30,7 +30,6 @@ const register = asyncHandler(async (req, res) => {
   } else {
     res.json('user not create');
   }
-  await sequelize.close(); // close the Sequelize connection
 });
 
 // Verify the token and make secret perm
@@ -57,8 +56,6 @@ const verifyToken = asyncHandler(async (req, res) => {
     });
     console.log(verified);
     if (verified) {
-      // Update the user
-      await User.update({ secret: user.secret }, { where: { id: userId } });
       res.json({ verified: true });
     } else {
       res.json({ verified: false });
@@ -78,15 +75,9 @@ const validateToken = asyncHandler(async (req, res) => {
   if (user) {
     let secretCode;
     if (user.secret) {
-      // Remove the outer quotes and unescape the string
-      const unescapedSecret = user.secret.slice(1, -1).replace(/\\"/g, '"');
-
-      // Extract the base32 value using a refined regular expression
-      const match = unescapedSecret.match(/"base32":"([^"]+)"/);
+      const match = user.secret.match(/"base32":"([^"]+)"/);
       if (match) {
         secretCode = match[1];
-      } else {
-        throw new Error('Base32 value not found in secret');
       }
     }
     console.log(secretCode);
